@@ -4,7 +4,6 @@ import { ArrowLeft, Camera, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { templates } from "@/lib/templates";
 import ShareDialog from "@/components/ShareDialog";
@@ -95,12 +94,6 @@ const transliterate = (text: string, lang: Language): string => {
   return text.split("").map((char) => transliterateMap[char]?.[lang] || char).join("");
 };
 
-interface ImageAdjustments {
-  offsetX: number;
-  offsetY: number;
-  scale: number;
-}
-
 const Editor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -116,10 +109,6 @@ const Editor = () => {
   const [userImage, setUserImage] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [posterDataUrl, setPosterDataUrl] = useState<string | null>(null);
-  const [adjustments, setAdjustments] = useState<ImageAdjustments>({ offsetX: 0, offsetY: 0, scale: 1 });
-  const [showAdjust, setShowAdjust] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
   useEffect(() => {
     const img = new Image();
@@ -173,10 +162,8 @@ const Editor = () => {
             dw = radius * 2;
             dh = dw / aspect;
           }
-          dw *= adjustments.scale;
-          dh *= adjustments.scale;
-          const drawX = cx - dw / 2 + adjustments.offsetX * RENDER_SCALE;
-          const drawY = cy - dh / 2 + adjustments.offsetY * RENDER_SCALE;
+          const drawX = cx - dw / 2;
+          const drawY = cy - dh / 2;
           ctx.drawImage(uImg, drawX, drawY, dw, dh);
           ctx.restore();
 
@@ -217,8 +204,7 @@ const Editor = () => {
       }
     };
     bgImg.src = template.image;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [template, userImage, name, translatedName, language, W, H, adjustments]);
+  }, [template, userImage, name, translatedName, language, W, H]);
 
   const drawText = (ctx: CanvasRenderingContext2D) => {
     const tp = template.textPosition;
@@ -276,91 +262,43 @@ const Editor = () => {
     setShareOpen(true);
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!userImage) return;
-    setIsDragging(true);
-    dragStart.current = { x: e.clientX, y: e.clientY, offsetX: adjustments.offsetX, offsetY: adjustments.offsetY };
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !userImage) return;
-    const dx = (e.clientX - dragStart.current.x) / 2;
-    const dy = (e.clientY - dragStart.current.y) / 2;
-    setAdjustments({
-      ...adjustments,
-      offsetX: dragStart.current.offsetX + dx,
-      offsetY: dragStart.current.offsetY + dy,
-    });
-  };
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!userImage) return;
-    const touch = e.touches[0];
-    setIsDragging(true);
-    dragStart.current = { x: touch.clientX, y: touch.clientY, offsetX: adjustments.offsetX, offsetY: adjustments.offsetY };
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !userImage) return;
-    const touch = e.touches[0];
-    const dx = (touch.clientX - dragStart.current.x) / 2;
-    const dy = (touch.clientY - dragStart.current.y) / 2;
-    setAdjustments({
-      ...adjustments,
-      offsetX: dragStart.current.offsetX + dx,
-      offsetY: dragStart.current.offsetY + dy,
-    });
-  };
-
-  const handleTouchEnd = () => setIsDragging(false);
-
-  const handleMouseUp = () => setIsDragging(false);
-
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-primary text-primary-foreground py-2 px-3 shadow-md md:py-3">
-        <div className="flex items-center gap-2 md:gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/templates")} className="text-primary-foreground hover:bg-primary-foreground/10 -ml-2 h-10 w-10 md:h-9 md:w-9">
-            <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
+      <header className="sticky top-0 z-20 bg-primary text-primary-foreground py-2 px-3 shadow-md">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/templates")} className="text-primary-foreground hover:bg-primary-foreground/10 -ml-2 h-10 w-10">
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-base md:text-lg font-bold">Edit Poster</h1>
+          <h1 className="text-base font-bold">Edit Poster</h1>
         </div>
       </header>
 
-      <main className="px-2 py-3 md:px-3 md:py-4">
-        <div className="flex flex-col gap-3 md:gap-4">
+      <main className="px-2 py-3">
+        <div className="flex flex-col gap-3">
           <div className="flex justify-center">
-            <div className="w-full max-w-[320px] md:max-w-[360px]">
+            <div className="w-full max-w-[320px]">
               <canvas
                 ref={canvasRef}
                 width={W}
                 height={H}
-                className="w-full rounded-md md:rounded-lg shadow-lg border border-border touch-none"
-                style={{ aspectRatio: `${template.width}/${template.height}`, cursor: userImage ? "grab" : "default" }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+                className="w-full rounded-md shadow-lg border border-border"
+                style={{ aspectRatio: `${template.width}/${template.height}` }}
               />
             </div>
           </div>
 
-          <div className="space-y-3 md:space-y-4">
-            <div className="p-3 md:p-4 rounded-lg md:rounded-lg bg-card border border-border shadow-sm space-y-3 md:space-y-4">
+          <div className="space-y-3">
+            <div className="p-3 rounded-lg bg-card border border-border shadow-sm space-y-3">
               <div>
-                <Label className="text-foreground font-semibold mb-2 block text-sm md:text-base">Upload Photo</Label>
-                <label className="flex items-center gap-2 md:gap-3 cursor-pointer p-3 md:p-4 border-2 border-dashed border-primary/30 rounded-lg hover:border-primary transition-colors bg-secondary/50 min-h-[50px] md:min-h-[60px]">
-                  <Camera className="h-6 w-6 md:h-8 md:w-8 text-primary flex-shrink-0" />
+                <Label className="text-foreground font-semibold mb-2 block text-sm">Upload Photo</Label>
+                <label className="flex items-center gap-3 cursor-pointer p-3 border-2 border-dashed border-primary/30 rounded-lg hover:border-primary transition-colors bg-secondary/50 min-h-[50px] active:bg-secondary/70">
+                  <Camera className="h-6 w-6 text-primary flex-shrink-0" />
                   <span className="text-sm text-muted-foreground">
                     {userImage ? "Change photo" : "Tap to upload from gallery"}
                   </span>
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     className="hidden"
                     onChange={handleImageUpload}
                   />
@@ -372,20 +310,20 @@ const Editor = () => {
               )}
 
               <div>
-                <Label htmlFor="name" className="text-foreground font-semibold mb-2 block text-sm md:text-base">Your Name</Label>
+                <Label htmlFor="name" className="text-foreground font-semibold mb-2 block text-sm">Your Name</Label>
                 <Input
                   id="name"
-                  placeholder="તમારું નામ દાખલ કરો"
+                  placeholder="Enter your name"
                   value={name}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  className="bg-secondary/50 h-11 md:h-12 text-base"
+                  className="bg-secondary/50 h-11 text-base"
                 />
               </div>
 
               <div>
-                <Label className="text-foreground font-semibold mb-2 block text-sm md:text-base">Language</Label>
+                <Label className="text-foreground font-semibold mb-2 block text-sm">Language</Label>
                 <Select value={language} onValueChange={handleLanguageChange}>
-                  <SelectTrigger className="bg-secondary/50 h-11 md:h-12">
+                  <SelectTrigger className="bg-secondary/50 h-11">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -397,13 +335,13 @@ const Editor = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 md:gap-3">
-              <Button className="flex-1 py-3 md:py-4 text-sm md:text-base font-bold" onClick={handleDownload}>
-                <Download className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
+            <div className="flex gap-2">
+              <Button className="flex-1 py-3 text-sm font-bold" onClick={handleDownload}>
+                <Download className="mr-2 h-4 w-4" />
                 Download
               </Button>
-              <Button variant="outline" className="flex-1 py-3 md:py-4 text-sm md:text-base font-bold border-primary text-primary hover:bg-primary hover:text-primary-foreground" onClick={handleShare}>
-                <Share2 className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
+              <Button variant="outline" className="flex-1 py-3 text-sm font-bold border-primary text-primary hover:bg-primary hover:text-primary-foreground" onClick={handleShare}>
+                <Share2 className="mr-2 h-4 w-4" />
                 Share
               </Button>
             </div>
