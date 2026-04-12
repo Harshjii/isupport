@@ -344,12 +344,11 @@ const Editor = () => {
                 <label className="flex items-center gap-3 cursor-pointer p-4 border-2 border-dashed border-primary/30 rounded-lg hover:border-primary transition-colors bg-secondary/50 min-h-[60px]">
                   <Camera className="h-8 w-8 text-primary flex-shrink-0" />
                   <span className="text-sm text-muted-foreground">
-                    {userImage ? "Change photo" : "Tap to upload from camera or gallery"}
+                    {userImage ? "Change photo" : "Tap to upload from gallery"}
                   </span>
                   <input
                     type="file"
                     accept="image/*"
-                    capture="user"
                     className="hidden"
                     onChange={handleImageUpload}
                   />
