@@ -24,8 +24,8 @@ export const templates: PosterTemplate[] = [
     image: templateMain,
     width: 454,
     height: 679,
-    imagePosition: { x: 0.22, y: 0.595, size: 0.42 },
-    textPosition: { x: 0.8, y: 0.82, fontSize: 22, color: "#FFFFFF" },
+    imagePosition: { x: 0.2, y: 0.62, size: 0.35 },
+    textPosition: { x: 0.5, y: 0.82, fontSize: 22, color: "#FF6600" },
   },
   {
     id: "1",

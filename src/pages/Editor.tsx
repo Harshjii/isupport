@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Download, Share2, Move, ZoomIn } from "lucide-react";
+import { ArrowLeft, Camera, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,7 +111,7 @@ const Editor = () => {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState("");
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useState<Language>("gu");
   const [translatedName, setTranslatedName] = useState("");
   const [userImage, setUserImage] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
@@ -125,6 +125,10 @@ const Editor = () => {
     const img = new Image();
     img.src = template.image;
   }, [template.image]);
+
+  useEffect(() => {
+    setTranslatedName(transliterate(name, "gu"));
+  }, [name]);
 
   const W = template.width * RENDER_SCALE;
   const H = template.height * RENDER_SCALE;
@@ -364,82 +368,14 @@ const Editor = () => {
               </div>
 
               {userImage && (
-                <div className="mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowAdjust(!showAdjust)}
-                    className="w-full flex items-center justify-center gap-2 py-2 md:py-3 text-sm"
-                  >
-                    <Move className="h-4 w-4" />
-                    {showAdjust ? "Hide Adjustments" : "Adjust Photo Position"}
-                  </Button>
-                  
-                  {showAdjust && (
-                    <div className="mt-3 p-3 md:p-4 rounded-lg bg-secondary/30 border border-border space-y-3 md:space-y-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs md:text-sm font-medium flex items-center gap-1 min-w-[60px] md:min-w-[80px]">
-                          <Move className="h-3 w-3 md:h-4 md:w-4" />
-                          X
-                        </span>
-                        <Slider
-                          value={[adjustments.offsetX]}
-                          onValueChange={([v]) => setAdjustments({ ...adjustments, offsetX: v })}
-                          min={-100}
-                          max={100}
-                          step={1}
-                          className="flex-1"
-                        />
-                        <span className="text-xs w-8 text-right">{adjustments.offsetX}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs md:text-sm font-medium flex items-center gap-1 min-w-[60px] md:min-w-[80px]">
-                          <Move className="h-3 w-3 md:h-4 md:w-4" />
-                          Y
-                        </span>
-                        <Slider
-                          value={[adjustments.offsetY]}
-                          onValueChange={([v]) => setAdjustments({ ...adjustments, offsetY: v })}
-                          min={-100}
-                          max={100}
-                          step={1}
-                          className="flex-1"
-                        />
-                        <span className="text-xs w-8 text-right">{adjustments.offsetY}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs md:text-sm font-medium flex items-center gap-1 min-w-[60px] md:min-w-[80px]">
-                          <ZoomIn className="h-3 w-3 md:h-4 md:w-4" />
-                          Scale
-                        </span>
-                        <Slider
-                          value={[adjustments.scale * 100]}
-                          onValueChange={([v]) => setAdjustments({ ...adjustments, scale: v / 100 })}
-                          min={50}
-                          max={200}
-                          step={1}
-                          className="flex-1"
-                        />
-                        <span className="text-xs w-8 text-right">{Math.round(adjustments.scale * 100)}%</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setAdjustments({ offsetX: 0, offsetY: 0, scale: 1 })}
-                        className="w-full text-muted-foreground py-2"
-                      >
-                        Reset
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                <div className="mt-2" />
               )}
 
               <div>
                 <Label htmlFor="name" className="text-foreground font-semibold mb-2 block text-sm md:text-base">Your Name</Label>
                 <Input
                   id="name"
-                  placeholder="Enter your name"
+                  placeholder="તમારું નામ દાખલ કરો"
                   value={name}
                   onChange={(e) => handleNameChange(e.target.value)}
                   className="bg-secondary/50 h-11 md:h-12 text-base"
