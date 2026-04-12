@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import heroBg from "@/assets/land.png";
+import heroBg from "@/assets/hn.png";
 
 const Index = () => {
   const navigate = useNavigate();
