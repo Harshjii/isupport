@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Download, Share2, Move, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { templates } from "@/lib/templates";
 import ShareDialog from "@/components/ShareDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Language = "en" | "hi" | "gu";
 
@@ -100,12 +101,13 @@ interface ImageAdjustments {
   scale: number;
 }
 
-const RENDER_SCALE = 2; // render at 2× for crisp output
-
 const Editor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const template = templates.find((t) => t.id === id) || templates[0];
+  const isMobile = useIsMobile();
+
+  const RENDER_SCALE = useMemo(() => (isMobile ? 1 : 2), [isMobile]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState("");
@@ -118,6 +120,11 @@ const Editor = () => {
   const [showAdjust, setShowAdjust] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = template.image;
+  }, [template.image]);
 
   const W = template.width * RENDER_SCALE;
   const H = template.height * RENDER_SCALE;
@@ -307,24 +314,24 @@ const Editor = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-primary text-primary-foreground py-3 px-4 shadow-md">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/templates")} className="text-primary-foreground hover:bg-primary-foreground/10 -ml-2">
-            <ArrowLeft className="h-6 w-6" />
+      <header className="sticky top-0 z-20 bg-primary text-primary-foreground py-2 px-3 shadow-md md:py-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/templates")} className="text-primary-foreground hover:bg-primary-foreground/10 -ml-2 h-10 w-10 md:h-9 md:w-9">
+            <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
           </Button>
-          <h1 className="text-lg font-bold">Edit Poster</h1>
+          <h1 className="text-base md:text-lg font-bold">Edit Poster</h1>
         </div>
       </header>
 
-      <main className="px-3 py-4">
-        <div className="flex flex-col gap-4">
+      <main className="px-2 py-3 md:px-3 md:py-4">
+        <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex justify-center">
-            <div className="w-full max-w-[360px]">
+            <div className="w-full max-w-[320px] md:max-w-[360px]">
               <canvas
                 ref={canvasRef}
                 width={W}
                 height={H}
-                className="w-full rounded-lg shadow-lg border border-border"
+                className="w-full rounded-md md:rounded-lg shadow-lg border border-border touch-none"
                 style={{ aspectRatio: `${template.width}/${template.height}`, cursor: userImage ? "grab" : "default" }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
@@ -337,12 +344,12 @@ const Editor = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-card border border-border shadow-sm space-y-4">
+          <div className="space-y-3 md:space-y-4">
+            <div className="p-3 md:p-4 rounded-lg md:rounded-lg bg-card border border-border shadow-sm space-y-3 md:space-y-4">
               <div>
-                <Label className="text-foreground font-semibold mb-2 block">Upload Photo</Label>
-                <label className="flex items-center gap-3 cursor-pointer p-4 border-2 border-dashed border-primary/30 rounded-lg hover:border-primary transition-colors bg-secondary/50 min-h-[60px]">
-                  <Camera className="h-8 w-8 text-primary flex-shrink-0" />
+                <Label className="text-foreground font-semibold mb-2 block text-sm md:text-base">Upload Photo</Label>
+                <label className="flex items-center gap-2 md:gap-3 cursor-pointer p-3 md:p-4 border-2 border-dashed border-primary/30 rounded-lg hover:border-primary transition-colors bg-secondary/50 min-h-[50px] md:min-h-[60px]">
+                  <Camera className="h-6 w-6 md:h-8 md:w-8 text-primary flex-shrink-0" />
                   <span className="text-sm text-muted-foreground">
                     {userImage ? "Change photo" : "Tap to upload from gallery"}
                   </span>
@@ -362,17 +369,17 @@ const Editor = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowAdjust(!showAdjust)}
-                    className="w-full flex items-center justify-center gap-2 py-3"
+                    className="w-full flex items-center justify-center gap-2 py-2 md:py-3 text-sm"
                   >
                     <Move className="h-4 w-4" />
                     {showAdjust ? "Hide Adjustments" : "Adjust Photo Position"}
                   </Button>
                   
                   {showAdjust && (
-                    <div className="mt-3 p-4 rounded-lg bg-secondary/30 border border-border space-y-4">
+                    <div className="mt-3 p-3 md:p-4 rounded-lg bg-secondary/30 border border-border space-y-3 md:space-y-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium flex items-center gap-1 min-w-[80px]">
-                          <Move className="h-4 w-4" />
+                        <span className="text-xs md:text-sm font-medium flex items-center gap-1 min-w-[60px] md:min-w-[80px]">
+                          <Move className="h-3 w-3 md:h-4 md:w-4" />
                           X
                         </span>
                         <Slider
@@ -386,8 +393,8 @@ const Editor = () => {
                         <span className="text-xs w-8 text-right">{adjustments.offsetX}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium flex items-center gap-1 min-w-[80px]">
-                          <Move className="h-4 w-4" />
+                        <span className="text-xs md:text-sm font-medium flex items-center gap-1 min-w-[60px] md:min-w-[80px]">
+                          <Move className="h-3 w-3 md:h-4 md:w-4" />
                           Y
                         </span>
                         <Slider
@@ -401,8 +408,8 @@ const Editor = () => {
                         <span className="text-xs w-8 text-right">{adjustments.offsetY}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium flex items-center gap-1 min-w-[80px]">
-                          <ZoomIn className="h-4 w-4" />
+                        <span className="text-xs md:text-sm font-medium flex items-center gap-1 min-w-[60px] md:min-w-[80px]">
+                          <ZoomIn className="h-3 w-3 md:h-4 md:w-4" />
                           Scale
                         </span>
                         <Slider
@@ -429,20 +436,20 @@ const Editor = () => {
               )}
 
               <div>
-                <Label htmlFor="name" className="text-foreground font-semibold mb-2 block">Your Name</Label>
+                <Label htmlFor="name" className="text-foreground font-semibold mb-2 block text-sm md:text-base">Your Name</Label>
                 <Input
                   id="name"
                   placeholder="Enter your name"
                   value={name}
                   onChange={(e) => handleNameChange(e.target.value)}
-                  className="bg-secondary/50 h-12 text-base"
+                  className="bg-secondary/50 h-11 md:h-12 text-base"
                 />
               </div>
 
               <div>
-                <Label className="text-foreground font-semibold mb-2 block">Language</Label>
+                <Label className="text-foreground font-semibold mb-2 block text-sm md:text-base">Language</Label>
                 <Select value={language} onValueChange={handleLanguageChange}>
-                  <SelectTrigger className="bg-secondary/50 h-12">
+                  <SelectTrigger className="bg-secondary/50 h-11 md:h-12">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -454,13 +461,13 @@ const Editor = () => {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button className="flex-1 py-4 text-base font-bold" onClick={handleDownload}>
-                <Download className="mr-2 h-5 w-5" />
-                Download PNG
+            <div className="flex gap-2 md:gap-3">
+              <Button className="flex-1 py-3 md:py-4 text-sm md:text-base font-bold" onClick={handleDownload}>
+                <Download className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
+                Download
               </Button>
-              <Button variant="outline" className="flex-1 py-4 text-base font-bold border-primary text-primary hover:bg-primary hover:text-primary-foreground" onClick={handleShare}>
-                <Share2 className="mr-2 h-5 w-5" />
+              <Button variant="outline" className="flex-1 py-3 md:py-4 text-sm md:text-base font-bold border-primary text-primary hover:bg-primary hover:text-primary-foreground" onClick={handleShare}>
+                <Share2 className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
                 Share
               </Button>
             </div>

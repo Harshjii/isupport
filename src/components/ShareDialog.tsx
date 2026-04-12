@@ -52,18 +52,18 @@ const ShareDialog = ({ open, onOpenChange, posterDataUrl }: ShareDialogProps) =>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm mx-4 max-w-[calc(100%-1rem)]">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Share Your Poster</DialogTitle>
+          <DialogTitle className="text-foreground text-base md:text-lg">Share Your Poster</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-2 gap-2 md:gap-3 pt-2">
           {shareOptions.map((opt) => (
             <Button
               key={opt.name}
-              className={`${opt.color} text-primary-foreground py-6`}
+              className={`${opt.color} text-primary-foreground py-4 md:py-6 text-sm`}
               onClick={() => handleShare(opt)}
             >
-              <opt.icon className="mr-2 h-5 w-5" />
+              <opt.icon className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
               {opt.name}
             </Button>
           ))}
