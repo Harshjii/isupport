@@ -100,8 +100,6 @@ const Editor = () => {
   const template = templates.find((t) => t.id === id) || templates[0];
   const isMobile = useIsMobile();
 
-  const RENDER_SCALE = useMemo(() => (isMobile ? 1 : 2), [isMobile]);
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState("");
   const [language, setLanguage] = useState<Language>("gu");
@@ -109,18 +107,41 @@ const Editor = () => {
   const [userImage, setUserImage] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [posterDataUrl, setPosterDataUrl] = useState<string | null>(null);
+  const [naturalSize, setNaturalSize] = useState({ width: template.width, height: template.height });
 
   useEffect(() => {
     const img = new Image();
     img.src = template.image;
+    img.onload = () => {
+      setNaturalSize({ width: img.naturalWidth, height: img.naturalHeight });
+    };
   }, [template.image]);
 
   useEffect(() => {
     setTranslatedName(transliterate(name, "gu"));
   }, [name]);
 
-  const W = template.width * RENDER_SCALE;
-  const H = template.height * RENDER_SCALE;
+  const RENDER_SCALE = 2;
+  const W = naturalSize.width * RENDER_SCALE;
+  const H = naturalSize.height * RENDER_SCALE;
+
+  const drawText = useCallback((ctx: CanvasRenderingContext2D) => {
+    const tp = template.textPosition;
+    const displayName = language === "en" ? name : translatedName;
+    if (displayName?.trim()) {
+      const fs = tp.fontSize * RENDER_SCALE;
+      ctx.font = `bold ${fs}px ${fontMap[language]}`;
+      ctx.fillStyle = tp.color;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,0.4)";
+      ctx.shadowBlur = 6 * RENDER_SCALE;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      ctx.fillText(displayName, tp.x * W, tp.y * H, W * 0.85);
+      ctx.shadowColor = "transparent";
+    }
+  }, [template, language, name, translatedName, RENDER_SCALE, W, H]);
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -204,25 +225,7 @@ const Editor = () => {
       }
     };
     bgImg.src = template.image;
-  }, [template, userImage, name, translatedName, language, W, H]);
-
-  const drawText = (ctx: CanvasRenderingContext2D) => {
-    const tp = template.textPosition;
-    const displayName = language === "en" ? name : translatedName;
-    if (displayName?.trim()) {
-      const fs = tp.fontSize * RENDER_SCALE;
-      ctx.font = `bold ${fs}px ${fontMap[language]}`;
-      ctx.fillStyle = tp.color;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.shadowColor = "rgba(0,0,0,0.4)";
-      ctx.shadowBlur = 6 * RENDER_SCALE;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
-      ctx.fillText(displayName, tp.x * W, tp.y * H, W * 0.85);
-      ctx.shadowColor = "transparent";
-    }
-  };
+  }, [template, userImage, W, H, RENDER_SCALE, drawText]);
 
   useEffect(() => {
     drawCanvas();
@@ -281,8 +284,8 @@ const Editor = () => {
                 ref={canvasRef}
                 width={W}
                 height={H}
-                className="w-full rounded-md shadow-lg border border-border"
-                style={{ aspectRatio: `${template.width}/${template.height}` }}
+                className="w-full h-auto rounded-md shadow-lg border border-border"
+                style={{ aspectRatio: `${naturalSize.width}/${naturalSize.height}` }}
               />
             </div>
           </div>
